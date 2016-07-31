@@ -1,0 +1,63 @@
+---
+- name: Check if github repo diretory exists locally
+  command: bash -c "ls -la {{ ansible_env.HOME }}/{{ app_dir_name }} | grep .git"
+  ignore_errors: True
+  register: repo_exists
+  tags:
+    - git_clone
+
+- name: Clone node app repository from github
+  git:
+    repo: "{{ git_repo_url }}"
+    clone: yes
+    dest: "{{ ansible_env.HOME }}/{{ app_dir_name }}"
+    update: yes
+  when: repo_exists|failed
+  tags:
+    - git_clone
+
+- name: Heroku login
+  expect:
+    command: heroku login
+    responses:
+      (?i)Email: "{{ heroku_login_email }}"
+      (?i)Password: "{{ heroku_login_password }}"
+  tags:
+    - heroku_login
+
+- name: Check if app name exists
+  command: bash -c "heroku apps | grep {{ app_name }}"
+  ignore_errors: True
+  register: app_name_exists
+  tags:
+    - heroku_deploy
+
+- name: Create, Deploy and Scale the app on Heroku
+  command: "{{ item }}"
+  args:
+    chdir: "{{ ansible_env.HOME }}/{{ app_dir_name }}"
+  with_items:
+    - heroku create {{ app_name }}
+    - git push heroku master
+    - heroku ps:scale web={{ no_of_instances }}
+  when: app_name_exists|failed
+  tags:
+    - heroku_deploy
+
+- name: Check if config variables are configured
+  command: bash -c "heroku config --app {{ app_name }} | grep {{ db_key }}"
+  ignore_errors: True
+  register: vars_configured
+  tags:
+    - vars_config
+
+- name: Configure database and other config variables
+  command: "heroku config:set --app {{ app_name }} {{ item.key }}={{ item.value }}"
+  with_items:
+    - { key: "{{ db_key }}", value: "{{ db_value }}" }
+    - { key: "{{ app_secret_key }}", value: "{{ app_secret_value }}" }
+  when: vars_configured|failed
+  tags:
+    - vars_config
+
+

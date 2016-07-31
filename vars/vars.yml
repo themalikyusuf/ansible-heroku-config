@@ -1,0 +1,10 @@
+app_dir_name: APP DIRECTORY NAME
+app_name: APP NAME
+app_secret_key: APP SECRET KEY
+app_secret_value: APP SECRET VALUE
+db_key: DB SECRET KEY
+db_value: DB SECRET VALUE
+git_repo_url: GITHUB REPO URL
+heroku_login_email: HEROKU LOGIN EMAIL 
+heroku_login_password: HEROKU LOGIN PASSWORD
+no_of_instances: NO OF INSTANCES TO SCALE TO

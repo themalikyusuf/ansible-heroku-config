@@ -1,0 +1,26 @@
+---
+- name: Check if Pip is installed
+  command: bash -c "pip --version | grep pip"
+  register: pip_installed
+  ignore_errors: True
+  tags:
+    - pip_pexpect
+
+- name: Install Pip if its uninstalled
+  apt: name=python-pip state=latest force=yes
+  when: pip_installed|failed
+  tags:
+    - pip_pexpect
+
+- name: Check if Pexpect is installed
+  command: bash -c "pip list | grep pexpect"
+  register: pexpect_installed
+  ignore_errors: True
+  tags:
+    - pip_pexpect
+
+- name: Install Pexpect if its uninstalled
+  pip: name=pexpect state=latest
+  when: pexpect_installed|failed
+  tags:
+    - pip_pexpect
